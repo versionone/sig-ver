@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -10,25 +11,23 @@ namespace VersionOne.SigVer
 	{
 		class Options
 		{
-			public Options(string[] args)
+			public Options(IList<string> args)
 			{
-				if (args.Length < 1)
+				if (args.Count < 1)
 					throw new CommandLineException("<input-assembly> is required");
-				else
-					InputAssembly = args[0];
+				InputAssembly = args[0];
 
-				if (args.Length < 2)
+				if (args.Count < 2)
 					throw new CommandLineException("<signing-key> is required");
-				else
-					SigningKey = args[1];
+				SigningKey = args[1];
 
-				if (args.Length > 2)
+				if (args.Count > 2)
 					Version = args[2];
 			}
 
-			public string InputAssembly { get; set; }
-			public string SigningKey { get; set; }
-			public string Version { get; set; }
+			public string InputAssembly { get; private set; }
+			public string SigningKey { get; private set; }
+			public string Version { get; private set; }
 		}
 
 		static int Main(string[] args)
@@ -37,33 +36,28 @@ namespace VersionOne.SigVer
 			{
 				var options = new Options(args);
 
-				string inputFilename = options.InputAssembly;
-				string snkFilename = options.SigningKey;
-				string outputFilename = inputFilename;
-				string outputVersion = options.Version;
+				var inputParameters = new ReaderParameters { ReadSymbols = true };
+				var inputAssembly = AssemblyDefinition.ReadAssembly(options.InputAssembly, inputParameters);
 
-				ReaderParameters inputParameters = new ReaderParameters() { ReadSymbols = true };
-				var inputAssembly = AssemblyDefinition.ReadAssembly(inputFilename, inputParameters);
-
-				if (outputVersion != null)
+				if (options.Version != null)
 				{
-					ChangeAssemblyNameVersion(inputAssembly, outputVersion);
-					ReplaceCustomAttribute<AssemblyVersionAttribute>(inputAssembly, outputVersion);
-					ReplaceCustomAttribute<AssemblyFileVersionAttribute>(inputAssembly, outputVersion);
+					ChangeAssemblyNameVersion(inputAssembly, options.Version);
+					ReplaceCustomAttribute<AssemblyVersionAttribute>(inputAssembly, options.Version);
+					ReplaceCustomAttribute<AssemblyFileVersionAttribute>(inputAssembly, options.Version);
 				}
 
 				StrongNameKeyPair signingKey;
-				using (var snkStream = new FileStream(snkFilename, FileMode.Open, FileAccess.Read))
+				using (var snkStream = new FileStream(options.SigningKey, FileMode.Open, FileAccess.Read))
 				{
 					signingKey = new StrongNameKeyPair(snkStream);
 				}
 
-				WriterParameters outputParameters = new WriterParameters()
+				var outputParameters = new WriterParameters
 				{
 					WriteSymbols = true,
 					StrongNameKeyPair = signingKey,
 				};
-				inputAssembly.Write(outputFilename, outputParameters);
+				inputAssembly.Write(options.InputAssembly, outputParameters);
 			}
 			catch (Exception ex)
 			{
