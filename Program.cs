@@ -36,8 +36,7 @@ namespace VersionOne.SigVer
 			{
 				var options = new Options(args);
 
-				var inputParameters = new ReaderParameters { ReadSymbols = true };
-				var inputAssembly = AssemblyDefinition.ReadAssembly(options.InputAssembly, inputParameters);
+				var inputAssembly = AssemblyDefinition.ReadAssembly(options.InputAssembly);
 
 				if (options.Version != null)
 				{
@@ -54,7 +53,6 @@ namespace VersionOne.SigVer
 
 				var outputParameters = new WriterParameters
 				{
-					WriteSymbols = true,
 					StrongNameKeyPair = signingKey,
 				};
 				inputAssembly.Write(options.InputAssembly, outputParameters);
