@@ -73,7 +73,7 @@ namespace VersionOne.SigVer
 				var infoVersion = string.Join(".", outputVersion.Split('.'), 0, 3);
 				AddMetaInfo<AssemblyInformationalVersionAttribute, string>(inputAssembly, infoVersion);
 			}
-			AddMetaInfo<AssemblyTitleAttribute, string>(inputAssembly, "VersionOne Pre-compiled spark Views");
+			AddMetaInfo<AssemblyTitleAttribute, string>(inputAssembly, "VersionOne Precompiled spark Views");
 			AddMetaInfo<AssemblyCompanyAttribute, string>(inputAssembly, "VersionOne, Inc.");
 			AddMetaInfo<AssemblyProductAttribute, string>(inputAssembly, "VersionOne");
 			AddMetaInfo<AssemblyCopyrightAttribute, string>(inputAssembly, string.Format("Copyright {0}, VersionOne, Inc. All rights reserved.", DateTime.Today.Year));
