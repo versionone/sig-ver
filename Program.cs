@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Mono.Cecil;
 
@@ -37,6 +38,7 @@ namespace VersionOne.SigVer
 				var options = new Options(args);
 
 				var inputAssembly = AssemblyDefinition.ReadAssembly(options.InputAssembly);
+				AddMetaInfo(inputAssembly, options.Version);
 
 				if (options.Version != null)
 				{
@@ -62,6 +64,28 @@ namespace VersionOne.SigVer
 			}
 
 			return 0;
+		}
+
+		private static void AddMetaInfo(AssemblyDefinition inputAssembly, string outputVersion)
+		{
+			if (outputVersion != null)
+			{
+				var infoVersion = string.Join(".", outputVersion.Split('.'), 0, 3);
+				AddMetaInfo<AssemblyInformationalVersionAttribute, string>(inputAssembly, infoVersion);
+			}
+			AddMetaInfo<AssemblyTitleAttribute, string>(inputAssembly, "VersionOne Pre-compiled spark Views");
+			AddMetaInfo<AssemblyCompanyAttribute, string>(inputAssembly, "VersionOne, Inc.");
+			AddMetaInfo<AssemblyProductAttribute, string>(inputAssembly, "VersionOne");
+			AddMetaInfo<AssemblyCopyrightAttribute, string>(inputAssembly, string.Format("Copyright {0}, VersionOne, Inc. All rights reserved.", DateTime.Today.Year));
+		}
+
+		private static void AddMetaInfo<A, T>(AssemblyDefinition inputAssembly, T value) where A : Attribute
+		{
+			var argumentType = inputAssembly.MainModule.Import(typeof(T));
+			var argument = new CustomAttributeArgument(argumentType, value);
+			var constructor = inputAssembly.MainModule.Import(typeof(A).GetConstructor(new[] { typeof(T) }));
+			var attribute = new CustomAttribute(constructor) { ConstructorArguments = { argument } };
+			inputAssembly.CustomAttributes.Add(attribute);
 		}
 
 		private static void ChangeAssemblyNameVersion(AssemblyDefinition inputAssembly, string outputVersion)
